@@ -1,0 +1,324 @@
+--[[
+	Dark Fluent UI Library
+	Inspired by Fluent Design but darker and edgier, not like Windows 11.
+	by Kilo Code
+]]
+
+local DarkFluent = {
+	Flags = {},
+	Theme = {
+		DarkFluent = {
+			TextColor = Color3.fromRGB(220, 220, 220),
+
+			Background = Color3.fromRGB(15, 15, 15),
+			Topbar = Color3.fromRGB(20, 20, 20),
+			Shadow = Color3.fromRGB(0, 0, 0),
+
+			NotificationBackground = Color3.fromRGB(10, 10, 10),
+			NotificationActionsBackground = Color3.fromRGB(30, 30, 30),
+
+			TabBackground = Color3.fromRGB(25, 25, 25),
+			TabStroke = Color3.fromRGB(40, 40, 40),
+			TabBackgroundSelected = Color3.fromRGB(50, 50, 50),
+			TabTextColor = Color3.fromRGB(180, 180, 180),
+			SelectedTabTextColor = Color3.fromRGB(255, 255, 255),
+
+			ElementBackground = Color3.fromRGB(20, 20, 20),
+			ElementBackgroundHover = Color3.fromRGB(30, 30, 30),
+			SecondaryElementBackground = Color3.fromRGB(15, 15, 15),
+			ElementStroke = Color3.fromRGB(50, 50, 50),
+			SecondaryElementStroke = Color3.fromRGB(35, 35, 35),
+
+			SliderBackground = Color3.fromRGB(100, 100, 100),
+			SliderProgress = Color3.fromRGB(150, 150, 150),
+			SliderStroke = Color3.fromRGB(80, 80, 80),
+
+			ToggleBackground = Color3.fromRGB(25, 25, 25),
+			ToggleEnabled = Color3.fromRGB(100, 100, 100),
+			ToggleDisabled = Color3.fromRGB(60, 60, 60),
+			ToggleEnabledStroke = Color3.fromRGB(120, 120, 120),
+			ToggleDisabledStroke = Color3.fromRGB(70, 70, 70),
+			ToggleEnabledOuterStroke = Color3.fromRGB(80, 80, 80),
+			ToggleDisabledOuterStroke = Color3.fromRGB(50, 50, 50),
+
+			DropdownSelected = Color3.fromRGB(30, 30, 30),
+			DropdownUnselected = Color3.fromRGB(20, 20, 20),
+
+			InputBackground = Color3.fromRGB(20, 20, 20),
+			InputStroke = Color3.fromRGB(50, 50, 50),
+			PlaceholderColor = Color3.fromRGB(120, 120, 120)
+		}
+	}
+}
+
+-- Services
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local RunService = game:GetService("RunService")
+local HttpService = game:GetService("HttpService")
+
+-- Variables
+local SelectedTheme = DarkFluent.Theme.DarkFluent
+local Hidden = false
+local Debounce = false
+local Minimised = false
+
+-- Create GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "DarkFluent"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+if gethui then
+	ScreenGui.Parent = gethui()
+elseif syn and syn.protect_gui then
+	syn.protect_gui(ScreenGui)
+	ScreenGui.Parent = CoreGui
+else
+	ScreenGui.Parent = CoreGui
+end
+
+-- Main Frame
+local Main = Instance.new("Frame")
+Main.Name = "Main"
+Main.Size = UDim2.new(0, 500, 0, 400)
+Main.Position = UDim2.new(0.5, -250, 0.5, -200)
+Main.BackgroundColor3 = SelectedTheme.Background
+Main.BorderSizePixel = 0
+Main.ClipsDescendants = true
+Main.Parent = ScreenGui
+
+-- Corner for Main (sharp corners)
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 0) -- Sharp corners
+MainCorner.Parent = Main
+
+-- Topbar
+local Topbar = Instance.new("Frame")
+Topbar.Name = "Topbar"
+Topbar.Size = UDim2.new(1, 0, 0, 40)
+Topbar.BackgroundColor3 = SelectedTheme.Topbar
+Topbar.BorderSizePixel = 0
+Topbar.Parent = Main
+
+local TopbarCorner = Instance.new("UICorner")
+TopbarCorner.CornerRadius = UDim.new(0, 0)
+TopbarCorner.Parent = Topbar
+
+local Title = Instance.new("TextLabel")
+Title.Name = "Title"
+Title.Size = UDim2.new(1, -80, 1, 0)
+Title.Position = UDim2.new(0, 10, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "Dark Fluent UI"
+Title.TextColor3 = SelectedTheme.TextColor
+Title.TextSize = 18
+Title.Font = Enum.Font.SourceSansBold
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = Topbar
+
+-- Close Button
+local CloseButton = Instance.new("TextButton")
+CloseButton.Name = "Close"
+CloseButton.Size = UDim2.new(0, 30, 0, 30)
+CloseButton.Position = UDim2.new(1, -35, 0.5, -15)
+CloseButton.BackgroundTransparency = 1
+CloseButton.Text = "X"
+CloseButton.TextColor3 = SelectedTheme.TextColor
+CloseButton.TextSize = 16
+CloseButton.Font = Enum.Font.SourceSansBold
+CloseButton.Parent = Topbar
+
+-- Minimize Button
+local MinimizeButton = Instance.new("TextButton")
+MinimizeButton.Name = "Minimize"
+MinimizeButton.Size = UDim2.new(0, 30, 0, 30)
+MinimizeButton.Position = UDim2.new(1, -70, 0.5, -15)
+MinimizeButton.BackgroundTransparency = 1
+MinimizeButton.Text = "-"
+MinimizeButton.TextColor3 = SelectedTheme.TextColor
+MinimizeButton.TextSize = 16
+MinimizeButton.Font = Enum.Font.SourceSansBold
+MinimizeButton.Parent = Topbar
+
+-- Elements Container
+local Elements = Instance.new("Frame")
+Elements.Name = "Elements"
+Elements.Size = UDim2.new(1, -20, 1, -60)
+Elements.Position = UDim2.new(0, 10, 0, 50)
+Elements.BackgroundTransparency = 1
+Elements.Parent = Main
+
+local ElementsList = Instance.new("UIListLayout")
+ElementsList.SortOrder = Enum.SortOrder.LayoutOrder
+ElementsList.Padding = UDim.new(0, 10)
+ElementsList.Parent = Elements
+
+-- Functions
+local function CreateButton(text, callback)
+	local Button = Instance.new("Frame")
+	Button.Name = "Button"
+	Button.Size = UDim2.new(1, 0, 0, 40)
+	Button.BackgroundColor3 = SelectedTheme.ElementBackground
+	Button.BorderSizePixel = 0
+	Button.Parent = Elements
+
+	local ButtonCorner = Instance.new("UICorner")
+	ButtonCorner.CornerRadius = UDim.new(0, 0) -- Sharp
+	ButtonCorner.Parent = Button
+
+	local ButtonText = Instance.new("TextLabel")
+	ButtonText.Size = UDim2.new(1, -20, 1, 0)
+	ButtonText.Position = UDim2.new(0, 10, 0, 0)
+	ButtonText.BackgroundTransparency = 1
+	ButtonText.Text = text
+	ButtonText.TextColor3 = SelectedTheme.TextColor
+	ButtonText.TextSize = 16
+	ButtonText.Font = Enum.Font.SourceSans
+	ButtonText.TextXAlignment = Enum.TextXAlignment.Left
+	ButtonText.Parent = Button
+
+	local ButtonInteract = Instance.new("TextButton")
+	ButtonInteract.Size = UDim2.new(1, 0, 1, 0)
+	ButtonInteract.BackgroundTransparency = 1
+	ButtonInteract.Text = ""
+	ButtonInteract.Parent = Button
+
+	ButtonInteract.MouseButton1Click:Connect(function()
+		TweenService:Create(Button, TweenInfo.new(0.1), {BackgroundColor3 = SelectedTheme.ElementBackgroundHover}):Play()
+		wait(0.1)
+		TweenService:Create(Button, TweenInfo.new(0.1), {BackgroundColor3 = SelectedTheme.ElementBackground}):Play()
+		if callback then callback() end
+	end)
+
+	return Button
+end
+
+local function CreateToggle(text, default, callback)
+	local ToggleFrame = Instance.new("Frame")
+	ToggleFrame.Name = "Toggle"
+	ToggleFrame.Size = UDim2.new(1, 0, 0, 40)
+	ToggleFrame.BackgroundColor3 = SelectedTheme.ElementBackground
+	ToggleFrame.BorderSizePixel = 0
+	ToggleFrame.Parent = Elements
+
+	local ToggleCorner = Instance.new("UICorner")
+	ToggleCorner.CornerRadius = UDim.new(0, 0)
+	ToggleCorner.Parent = ToggleFrame
+
+	local ToggleText = Instance.new("TextLabel")
+	ToggleText.Size = UDim2.new(1, -60, 1, 0)
+	ToggleText.Position = UDim2.new(0, 10, 0, 0)
+	ToggleText.BackgroundTransparency = 1
+	ToggleText.Text = text
+	ToggleText.TextColor3 = SelectedTheme.TextColor
+	ToggleText.TextSize = 16
+	ToggleText.Font = Enum.Font.SourceSans
+	ToggleText.TextXAlignment = Enum.TextXAlignment.Left
+	ToggleText.Parent = ToggleFrame
+
+	local ToggleSwitch = Instance.new("Frame")
+	ToggleSwitch.Size = UDim2.new(0, 40, 0, 20)
+	ToggleSwitch.Position = UDim2.new(1, -50, 0.5, -10)
+	ToggleSwitch.BackgroundColor3 = SelectedTheme.ToggleBackground
+	ToggleSwitch.BorderSizePixel = 0
+	ToggleSwitch.Parent = ToggleFrame
+
+	local ToggleIndicator = Instance.new("Frame")
+	ToggleIndicator.Size = UDim2.new(0, 16, 0, 16)
+	ToggleIndicator.Position = default and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
+	ToggleIndicator.BackgroundColor3 = default and SelectedTheme.ToggleEnabled or SelectedTheme.ToggleDisabled
+	ToggleIndicator.BorderSizePixel = 0
+	ToggleIndicator.Parent = ToggleSwitch
+
+	local ToggleInteract = Instance.new("TextButton")
+	ToggleInteract.Size = UDim2.new(1, 0, 1, 0)
+	ToggleInteract.BackgroundTransparency = 1
+	ToggleInteract.Text = ""
+	ToggleInteract.Parent = ToggleFrame
+
+	local toggled = default
+	ToggleInteract.MouseButton1Click:Connect(function()
+		toggled = not toggled
+		TweenService:Create(ToggleIndicator, TweenInfo.new(0.2), {Position = toggled and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)}):Play()
+		TweenService:Create(ToggleIndicator, TweenInfo.new(0.2), {BackgroundColor3 = toggled and SelectedTheme.ToggleEnabled or SelectedTheme.ToggleDisabled}):Play()
+		if callback then callback(toggled) end
+	end)
+
+	return ToggleFrame
+end
+
+-- Dragging
+local dragging = false
+local dragInput
+local dragStart
+local startPos
+
+local function updateInput(input)
+	local delta = input.Position - dragStart
+	Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+Topbar.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = Main.Position
+
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+Topbar.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+		dragInput = input
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if input == dragInput and dragging then
+		updateInput(input)
+	end
+end)
+
+-- Close and Minimize
+CloseButton.MouseButton1Click:Connect(function()
+	ScreenGui:Destroy()
+end)
+
+MinimizeButton.MouseButton1Click:Connect(function()
+	Minimised = not Minimised
+	if Minimised then
+		Elements.Visible = false
+		Main.Size = UDim2.new(0, 500, 0, 40)
+	else
+		Elements.Visible = true
+		Main.Size = UDim2.new(0, 500, 0, 400)
+	end
+end)
+
+-- Public API
+function DarkFluent:CreateWindow(settings)
+	settings = settings or {}
+	Title.Text = settings.Title or "Dark Fluent UI"
+	return {
+		CreateTab = function(self, name)
+			return {
+				CreateButton = function(self, btnSettings)
+					return CreateButton(btnSettings.Name, btnSettings.Callback)
+				end,
+				CreateToggle = function(self, togSettings)
+					return CreateToggle(togSettings.Name, togSettings.CurrentValue, togSettings.Callback)
+				end
+			}
+		end
+	}
+end
+
+return DarkFluent
